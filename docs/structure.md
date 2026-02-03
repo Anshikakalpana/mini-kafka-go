@@ -1,183 +1,73 @@
 mini-kafka/
 ├── cmd/
 │   ├── broker/
-│   │   └── main.go
+│   │   └── main.go             # entrypoint: starts the TCP broker
 │   ├── producer/
-│   │   └── main.go
+│   │   └── main.go             # simple CLI producer (for demo & testing)
 │   ├── consumer/
-│   │   └── main.go
+│   │   └── main.go             # simple CLI consumer (pull from offset)
 │   └── admin/
-│       └── main.go
+│       └── main.go             # CLI: create-topic, list-topics, etc.
 │
 ├── internal/
 │   ├── broker/
-│   │   ├── server.go
-│   │   ├── lifecycle.go
-│   │   ├── router.go
-│   │   ├── handlers.go
-│   │   ├── errors.go
-│   │   └── limits.go
-│   │
-│   ├── api/
-│   │   └── http/
-│   │       ├── server.go
-│   │       ├── routes.go
-│   │       ├── middleware.go
-│   │       ├── produce_handler.go
-│   │       ├── fetch_handler.go
-│   │       ├── commit_handler.go
-│   │       ├── group_handler.go
-│   │       └── admin_handler.go
+│   │   ├── server.go           # TCP listener + connection handling loop
+│   │   ├── handlers.go         # produce, fetch, commit-offset, create-topic logic
+│   │   ├── router.go           # maps request type → handler
+│   │   └── config.go           # broker config struct + loading
 │   │
 │   ├── protocol/
-│   │   ├── request.go
-│   │   ├── response.go
-│   │   ├── codec.go
-│   │   ├── errors.go
-│   │   └── types.go
-│   │
-│   ├── metadata/
-│   │   ├── registry.go
-│   │   ├── topic_metadata.go
-│   │   └── broker_metadata.go
+│   │   ├── codec.go            # length-prefixed JSON encode/decode
+│   │   └── types.go            # Request, Response, Record structs
 │   │
 │   ├── topic/
-│   │   ├── manager.go
-│   │   ├── topic.go
-│   │   ├── config.go
-│   │   └── errors.go
-│   │
-│   ├── partition/
-│   │   ├── partition.go
-│   │   ├── manager.go
-│   │   ├── assigner.go
-│   │   ├── watermark.go
-│   │   └── errors.go
+│   │   ├── manager.go          # in-memory topic → partitions map + CreateTopic
+│   │   └── partition.go        # per-partition state (log + mutex)
 │   │
 │   ├── storage/
-│   │   ├── log/
-│   │   │   ├── log.go
-│   │   │   ├── segment.go
-│   │   │   ├── index.go
-│   │   │   ├── reader.go
-│   │   │   ├── writer.go
-│   │   │   ├── retention.go
-│   │   │   └── recovery.go
-│   │   ├── filesystem/
-│   │   │   ├── layout.go
-│   │   │   ├── lock.go
-│   │   │   └── cleanup.go
-│   │   └── errors.go
-│   │
-│   ├── producer/
-│   │   ├── producer.go
-│   │   ├── partitioner.go
-│   │   ├── batcher.go
-│   │   └── errors.go
-│   │
-│   ├── consumer/
-│   │   ├── fetcher.go
-│   │   ├── poller.go
-│   │   ├── processor.go
-│   │   ├── committer.go
-│   │   ├── lag.go
-│   │   └── errors.go
+│   │   ├── log.go              # core append-only log: Append, ReadFrom(offset)
+│   │   ├── segment.go          # segment file management + rolling
+│   │   └── retention.go        # optional: size/time-based cleanup
 │   │
 │   ├── offset/
-│   │   ├── store.go
-│   │   ├── file_store.go
-│   │   └── errors.go
-│   │
-│   ├── group/
-│   │   ├── group.go
-│   │   ├── membership.go
-│   │   ├── assignor.go
-│   │   ├── rebalance.go
-│   │   └── errors.go
-│   │
-│   ├── config/
-│   │   ├── broker.go
-│   │   ├── api.go
-│   │   ├── storage.go
-│   │   ├── producer.go
-│   │   ├── consumer.go
-│   │   └── loader.go
-│   │
-│   ├── observability/
-│   │   ├── logger.go
-│   │   ├── metrics.go
-│   │   ├── health.go
-│   │   └── errors.go
+│   │   └── store.go            # file-based offset storage per group/topic/partition
 │   │
 │   └── utils/
-│       ├── hashing.go
-│       ├── retry.go
-│       ├── backoff.go
-│       ├── clock.go
-│       └── errors.go
-│
-├── pkg/
-│   └── client/
-│       ├── client.go
-│       ├── producer.go
-│       ├── consumer.go
-│       ├── admin.go
-│       ├── config.go
-│       └── errors.go
+│       ├── hashing.go          # key → partition (murmur or simple mod)
+│       └── errors.go           # custom error types + wrappers
 │
 ├── configs/
-│   ├── broker.yaml
-│   ├── producer.yaml
-│   ├── consumer.yaml
-│   └── admin.yaml
+│   └── broker.yaml             # port, data dir, segment size, etc.
 │
-├── data/
-│   └── broker-1/
-│       ├── topics/
-│       │   └── orders/
-│       │       ├── partition-0/
-│       │       │   ├── 00000000000000000000.log
-│       │       │   └── 00000000000000000000.index
-│       │       └── partition-1/
-│       │           ├── 00000000000000000000.log
-│       │           └── 00000000000000000000.index
-│       └── offsets/
-│           └── analytics/
-│               ├── orders.partition-0.offset
-│               └── orders.partition-1.offset
-│
-├── docs/
-│   ├── architecture.md
-│   ├── apis.md
-│   ├── storage-format.md
-│   ├── consumer-groups.md
-│   ├── offsets.md
-│   ├── retention.md
-│   └── roadmap.md
+├── data/                       # runtime: gitignore this
+│   └── broker-1/               # (topics/, offsets/ created automatically)
 │
 ├── scripts/
-│   ├── start-broker.sh
-│   ├── create-topic.sh
-│   ├── run-producer.sh
-│   ├── run-consumer.sh
-│   └── demo.sh
+│   └── demo.sh                 # one-command: start broker + produce + consume + restart
 │
 ├── tests/
-│   ├── unit/
-│   │   ├── storage_test.go
-│   │   ├── partition_test.go
-│   │   ├── offset_test.go
-│   │   └── protocol_test.go
-│   └── integration/
-│       ├── produce_fetch_test.go
-│       ├── consumer_resume_test.go
-│       └── crash_recovery_test.go
+│   ├── storage_test.go         # log append/read, segment rolling, recovery
+│   ├── broker_test.go          # end-to-end: produce → fetch → commit → restart
+│   └── recovery_test.go        # (optional but strong) crash simulation
 │
-├── Makefile
 ├── Dockerfile
-├── docker-compose.yml
+├── docker-compose.yml          # (optional) for multi-broker later or easy local run
+├── Makefile                    # test, bench, lint, run-broker, etc.
+├── README.md                   # architecture, usage, demo, benchmarks
 ├── go.mod
 ├── go.sum
-├── README.md
-├── LICENSE
 └── .gitignore
+
+V1 Features Checklist 
+
+✅ Create topic (fixed partitions)
+✅ Produce → returns (partition, offset)
+✅ Fetch → from (topic, partition, offset)
+✅ Persistent append-only log
+✅ Offset commit per consumer group (simple file)
+
+Extra 
+
+✅ segment rolling
+✅ retention by size
+✅ simple benchmark script (100k msgs)

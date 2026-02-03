@@ -2,47 +2,22 @@ broker:
   service:
     name: broker-1
     dataDir: ./data/broker-1
-    port: 8080
     host: localhost
-    clusterId: cluster-1 # on which cluster the kafka server is runing
-    brokerId: 1
-  
+    port: 8080
+
   segment:
-    messageSize: 10MB   #max size a message should have
-    normalSize: 100MB   
-    flushInterval: 5000  # milliseconds time taken to flush data from RAM to disk
-    flushMessages: 10000  # number of messages before flush
-  
+    maxMessageBytes: 10485760     # 10MB
+    maxSegmentBytes: 104857600    # 100MB
+    flushIntervalMs: 5000
+    flushMessages: 10000
+
   retention:
-    time-based: 7*24*60*60   #(7 days) time until which a message can stay in log
-    size-based: 1024MB       # 1GB data can be stored in log
-    checkInterval: 300000  # 5 minutes in milliseconds
-  
-  replication:
-    factor: 3  # number of replicas
-    minInSyncReplicas: 2
-    ackTimeout: 30000  # milliseconds
-  
-  performance:
-    maxConnections: 1000
-    socketSendBuffer: 102400  # 100KB
-    socketReceiveBuffer: 102400  # 100KB
-    maxRequestSize: 104857600  # 100MB
-    numNetworkThreads: 8
-    numIoThreads: 8
-  
+    maxAgeSeconds: 604800
+    maxBytes: 1073741824
+    checkIntervalMs: 300000
+
   logging:
-    level: INFO
+    level: info
     logDir: ./logs/broker-1
     maxLogFiles: 10
-    maxLogSize: 100MB
-  
-  health:
-    checkInterval: 30000  # milliseconds
-    timeout: 10000  # milliseconds
-  
-  security:
-    enableAuth: false
-    enableTLS: false
-    # tlsCertPath: ./certs/broker.crt
-    # tlsKeyPath: ./certs/broker.key
+    maxLogSizeBytes: 104857600
