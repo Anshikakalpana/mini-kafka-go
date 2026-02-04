@@ -12,7 +12,7 @@ mini-kafka/
 ├── internal/
 │   ├── broker/
 │   │   ├── server.go           # TCP listener + connection handling loop
-│   │   ├── handlers.go         # produce, fetch, commit-offset, create-topic logic
+│   │   ├── handlers.go         # produce, fetch, commit-offset, create-topic logic   |__loader.go
 │   │   ├── router.go           # maps request type → handler
 │   │   └── config.go           # broker config struct + loading
 │   │

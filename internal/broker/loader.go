@@ -31,9 +31,7 @@ func LoadBrokerConfig(path string) (*BrokerConfig, error) {
 	if cfg.Broker.Service.Port == 0 {
 		return nil, fmt.Errorf("broker.service.port is required")
 	}
-	if cfg.Broker.Service.BrokerID < 0 {
-		return nil, fmt.Errorf("broker.service.brokerId must be >= 0")
-	}
+	
 
 	return &cfg, nil
 }
